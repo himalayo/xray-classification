@@ -28,9 +28,9 @@ preprocessing_function = {
 def create_model(model_name, models = available_models, dense_units = 512, learning_rate = 0.00001):
     base_model = models[model_name.lower()](weights = 'imagenet', include_top = False)
     base_model.trainable = False
-    for layer in base_model.layers[-(len(base_model.layers)//10):]:
-        if not isinstance(layer, keras.layers.LayerNormalization):
-            layer.trainable = True
+#    for layer in base_model.layers[-(len(base_model.layers)//10):]:
+#        if not (isinstance(layer, keras.layers.LayerNormalization) or isinstance(layer, keras.layers.BatchNormalization)):
+#            layer.trainable = True
 
     x = base_model.output
     x = GlobalAveragePooling2D()(x)
@@ -49,7 +49,7 @@ def create_model(model_name, models = available_models, dense_units = 512, learn
                        keras.metrics.FalsePositives()
                        ])
 
-    model.summary()
+    model.summary(show_trainable=True)
     return model
 
 
@@ -100,13 +100,13 @@ if __name__ == "__main__":
             epochs = epochs,
               validation_data = vali_data,
             callbacks = [
-                keras.callbacks.ModelCheckpoint(filepath=f"./tmp_{model_name}_{dense_units}/chck/{{epoch:02d}}_{{binary_accuracy:.8f}}.keras", monitor='binary_accuracy', save_freq=100),
-                keras.callbacks.BackupAndRestore(backup_dir=f"./tmp_{model_name}_{dense_units}/backups", save_freq=100),
-                keras.callbacks.CSVLogger(f'./{model_name}_{dense_units}.log')
+                keras.callbacks.ModelCheckpoint(filepath=f"./tmp_{model_name}_{dense_units}_{lr}/chck/{{epoch:02d}}_{{binary_accuracy:.8f}}.keras", monitor='binary_accuracy', save_freq=100),
+                keras.callbacks.BackupAndRestore(backup_dir=f"./tmp_{model_name}_{dense_units}_{lr}/backups", save_freq=100),
+                keras.callbacks.CSVLogger(f'./{model_name}_{dense_units}_{lr}.log')
                 ])
 
     model.trainable = True
-    model.save(f"{model_name}_{dense_units}.keras")
-    model = keras.models.load_model(f"{model_name}_{dense_units}.keras")
+    model.save(f"{model_name}_{dense_units}_{lr}.keras")
+    model = keras.models.load_model(f"{model_name}_{dense_units}_{lr}.keras")
 
     model.evaluate(test_data)
